@@ -1,0 +1,108 @@
+CREATE DATABASE Hospitals;
+
+--CREATE TABLE PATIENTS
+
+CREATE TABLE Patients(
+	Hospital_name VARCHAR(50),
+	Location VARCHAR (50),
+	Department VARCHAR (50),
+	Doctor_count INT,
+	Patient_count INT,
+	Admission_date DATE,
+	Discharge_date DATE,
+	Medical_expenses FLOAT
+);
+SELECT*FROM Patients;
+
+--IMPORTING CSV FILE INTO TABLE PATIENTS
+
+COPY
+Patients (Hospital_name, Location, Department, Doctor_count,Patient_count,Admission_date,Discharge_date,Medical_expenses)
+FROM 'D:\PostgreSQL\Hospital_Data_Synthetic_800.csv'
+CSV HEADER;
+
+SHOW DATESTYLE;
+
+SET DATESTYLE='DMY';
+
+--TOTAL NUMBER OF PATIENTS
+
+SELECT SUM(Patient_count) AS TotalPatients
+FROM Patients;
+
+--AVERAGE NUMBER OF DOCTOR OF EACH HOSPITAL
+
+SELECT  hospital_name, AVG(Doctor_count) AS AVGCOUNT
+FROM Patients
+GROUP BY Hospital_name;
+
+
+-- top 3 department with highest number pf patients
+
+SELECT Hospital_name,Department,SUM(patient_count) AS highest_patients
+FROM Patients
+GROUP BY Hospital_name,Department
+ORDER BY highest_patients DESC LIMIT 3;
+
+--MAXIMUM MEDICAL EXPENSES
+
+SELECT Hospital_Name, SUM(Medical_Expenses) AS TotalExpenses
+FROM Patients
+GROUP BY Hospital_Name
+ORDER BY TotalExpenses DESC
+LIMIT 1;
+
+--DAILY AVERAGE MEDICAL EXPENSES
+
+ SELECT 
+  Hospital_Name,
+  ROUND((SUM(Medical_Expenses) / SUM(Discharge_Date - Admission_Date))::numeric, 2) AS DailyAvgExpense
+FROM Patients
+WHERE Discharge_Date > Admission_Date
+GROUP BY Hospital_Name;
+
+--LONGETS STAY IN THE HOSPITAL
+
+SELECT hospital_name,
+  (Discharge_Date) - (Admission_Date) AS StayLength
+FROM Patients
+ORDER BY StayLength DESC
+LIMIT 1;
+
+
+--TOTAL PATIENTS TREATED PER CITY
+
+SELECT Location AS City, SUM(Patient_Count) AS TotalPatients
+FROM Patients
+GROUP BY Location
+ORDER BY TotalPatients DESC;
+
+
+--AVERAGE LENTH OF STAY PER DEPARTMENT
+
+SELECT 
+  Department,
+  ROUND(AVG(Discharge_Date - Admission_Date)::numeric, 2) AS AvgStay
+FROM Patients
+WHERE Discharge_Date > Admission_Date
+GROUP BY Department
+ORDER BY AvgStay DESC;
+--PostgreSQL allows rounding numeric values to N decimals	Use ::numeric or CAST(... AS numeric)
+
+
+-- DEPARTMENT WITH LOWEST NUMER OF Paitients
+
+SELECT Department, SUM(Patient_Count) AS TotalPatients
+FROM Patients
+GROUP BY Department
+ORDER BY TotalPatients ASC
+LIMIT 1;
+
+--MONTHLY MEDICAL EXPENSES
+
+SELECT 
+  TO_CHAR(Admission_Date, 'YYYY-MM') AS Month,
+  SUM(Medical_Expenses) AS TotalExpenses
+FROM Patients
+GROUP BY Month
+ORDER BY Month;
